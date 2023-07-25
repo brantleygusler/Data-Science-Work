@@ -1,0 +1,55 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+```
+
+```{r}
+pizza<-suppressMessages(read_csv('pizza.csv'))
+```
+
+```{r}
+#Create a tibble containing driver names of instances where free_wine = 1, discount_customer = 1, and the order contained more than 4 pizzas.  (There will be repeated names).
+Q1<-pizza%>%
+  filter(free_wine==1, discount_customer==1,pizzas>4)%>%
+  select(driver)
+```
+
+```{r}
+#Create a variable named ratio that is the ratio of bill to pizza, called ratio.  What is the mean of that value (call the value mean_ratio)? 
+Q2<-pizza%>%
+  mutate(ratio=bill/pizzas)%>%
+  as.data.frame(ratio)%>%
+  summarise(mean(ratio,na.rm=TRUE))
+```
+
+```{r}
+#For each day of the week, what is the variance in pizzas?
+Q3<-pizza%>%
+  as.data.frame(pizza)%>%
+  group_by(day)%>%
+  summarise(var_pizzas=var(pizzas),na.rm=TRUE)%>%
+  select(day,var_pizzas)
+```
+
+```{r}
+#Which operator had the higher average bill?
+Q4<-pizza%>%
+  group_by(operator)%>%
+  summarise(BillVar=mean(bill,na.rm=TRUE),.groups='drop')%>%
+  arrange(desc(BillVar))%>%
+  select(operator)%>%
+  head(1)
+```
+
+```{r}
+#What was the highest amount of free wine given by day/driver combination?  (For instance, Friday Bruno was 13, while Wednesday Salvator was 12)
+Q5<-pizza%>%
+  group_by(day,driver)%>%
+  summarise(intvar=as.integer(sum(free_wine)))%>%
+  arrange(desc(intvar))%>%
+  head(1)
+```

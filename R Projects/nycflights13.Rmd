@@ -1,0 +1,65 @@
+---
+title: "nycflights13-Brantley"
+output: html_notebook
+---
+  
+```{r}
+installed.packages('nycflights13')
+```
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(nycflights13))
+```
+
+```{r}
+flights
+view(flights)
+```
+
+```{r}
+#What is the mean distance of flights for each of the carriers AA, EV, and FL?
+Q1<- nycflights13::flights%>%
+  filter(carrier=='AA'|carrier=='FL'|carrier=='EV')%>%
+  group_by(carrier)%>%
+  summarise(round(mean(distance),2))%>%
+  as.data.frame()
+```
+
+```{r}
+#For the month with the highest number of flights, what is that value? Hint: use head(1).
+Q2<- nycflights13::flights%>%
+  group_by(month)%>%
+  summarise(n=n())%>%
+  slice_max(n)
+```
+
+```{r}
+#Find the five shortest minimum distances, called min_dist, by origin/destination combination.  
+Q3<- nycflights13::flights%>%
+  group_by(origin,dest)%>%
+  summarise(minvar=min(distance))%>%
+  arrange(minvar)%>%
+  head(5)
+```
+
+```{r}
+#What five days of the year had the highest mean distance when leaving from JFK?  Sort in descending order.
+Q4<- nycflights13::flights%>%
+  filter(origin=='JFK')%>%
+  group_by(month,day)%>%
+  summarise(mdvar=round(mean(distance,na.rm=TRUE),2))%>%
+  arrange(desc(mdvar))%>%
+  head(5)%>%
+  as.data.frame
+```
+
+```{r}
+#Calculate the maximum arrival delay for flights to Boston and Atlanta, separately.
+Q5<- nycflights13::flights%>%
+  filter(dest=='ATL'|dest=='BOS')%>%
+  group_by(dest)%>%
+  summarise(arrvar=max(arr_delay, na.rm=TRUE))%>%
+  arrange(arrvar)%>%
+  head(2)
+```

@@ -1,0 +1,52 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(lm.beta))
+```
+
+```{r}
+msleep
+summary(msleep)
+head(msleep)
+```
+
+```{r}
+#Run cor.test() for the relationship between total sleep and body weight values.
+Q1<-cor.test(msleep$sleep_total,msleep$bodywt)
+Q1
+```
+
+```{r}
+#Create a correlation matrix for the relations among total sleep, rem sleep, brain weight, and body weight.  Make sure to remove missing values
+aaVar<-select(msleep,sleep_total,sleep_rem,brainwt,bodywt)
+bbVar<-filter(aaVar,sleep_total!='NA',sleep_rem!='NA',brainwt!='NA',bodywt!='NA')
+Q2<-round(cor(bbVar),2)
+Q2
+```
+
+```{r}
+#Run a regression predicting body weight by vor
+Q3<-lm(bodywt~vore,msleep)
+Q3
+```
+
+```{r}
+#Create a regression predicting bodywt by vore and REM sleep.  Compared to the model in Q3, which one has the better AIC?
+VarModelcc<-Q3
+VarModeldd<-update((lm(bodywt~vore,msleep)),.~.+sleep_rem)
+Q4<-AIC(VarModeldd)
+Q4
+```
+
+```{r}
+#Create a logistic regression predicting whether or not an animal is a carnivore or herbivore based on sleep total.  
+eeVar<-msleep%>%
+  filter(vore!='omni'&vore!='insecti')%>%
+  mutate(vorebin=ifelse(vore=='carni',0,1))
+Q5<-glm(vorebin~sleep_total,binomial(),eeVar)
+Q5
+```

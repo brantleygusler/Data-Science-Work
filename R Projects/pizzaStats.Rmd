@@ -1,0 +1,49 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(lm.beta))
+```
+
+```{r}
+pizza <- read_csv('pizza.csv')
+pizza
+```
+
+```{r}
+#Create a correlation matrix for temperature, bill, pizzas, and got_wine.
+aaVar<-select(pizza,temperature,bill,pizzas,got_wine)
+bbVar<-filter(aaVar,temperature!='NA',bill!='NA',pizzas!='NA',got_wine!='NA')
+Q1<-round(cor(bbVar),2)
+```
+
+```{r}
+#Create a correlation matrix of the relationships between time, temperature, bill, and pizzas for Laura in the East branch. 
+ccVar<-filter(pizza,branch=='East'&operator=='Laura')
+ddVar<-select(ccVar,time,temperature,bill,pizzas)
+eeVar<-filter(ddVar,time!='NA',temperature!='NA',bill!='NA',pizzas!='NA')
+Q2<-round(cor(eeVar),2)
+```
+
+```{r}
+#Run a regression predicting whether or not wine was ordered from temperature, bill, and pizza.
+Q3<-round(summary(glm(got_wine~temperature+bill+pizzas+binomial(),pizza))$coef,2)
+Q3
+```
+
+```{r}
+#Run a regression predicting bill from temperature, pizzas, and got_wine.
+Q4<-lm.beta(lm(bill~temperature+pizzas+got_wine,pizza))
+Q4
+```
+
+```{r}
+#Add operator to the regression from Q4.  Which is the better model?
+ffVar<-lm(bill~temperature+pizzas+got_wine,pizza)
+ggVar<-update(ffVar,.~.+operator)
+Q5<-AIC(ffVar)
+Q5
+```

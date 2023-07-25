@@ -1,0 +1,60 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+install.packages("tidyverse")
+install.packages("nycflights13")
+install.packages("lm.beta")
+```
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(nycflights13))
+suppressPackageStartupMessages(library(lm.beta))
+```
+
+```{r}
+flights
+summary(flights)
+head(flights)
+```
+
+```{r}
+aaVar<-quantile(flights$dep_delay,0.9985,na.rm=TRUE)
+bbVar<-quantile(flights$dep_delay,0.0025,na.rm=TRUE)
+ccVar<-which(flights$dep_delay>aaVar|flights$dep_delay<bbVar)
+ddVar<-flights[-ccVar,]
+```
+
+```{r}
+#Address the outliers for departure delay as described in the outliers lectures. You’ll want to create a new dataset without outliers for use in Q2-5. What percentage of data remains following the removal of these outliers? The answer should be assigned to Q1.
+Q1<-round((nrow(flights)-length(ccVar))/nrow(flights)*100,2)
+Q1
+```
+
+```{r}
+#Run cor.test for the relationship between departure delay and distance. Assign the results of the cor.test() function call to Q2. Do not round.
+Q2<-(cor.test(ddVar$dep_delay,ddVar$distance))
+Q2
+```
+
+```{r}
+#Create a regression predicting departure delay from distance.The summary of the model should be assigned to Q3. Do not round.
+Q3<-summary(lm(dep_delay~distance,ddVar))
+Q3
+```
+
+```{r}
+#Calculate standardized regression coefficients with lm.beta for the regression from Q3.
+Q4<-lm.beta(lm(dep_delay~distance,ddVar))
+Q4
+```
+
+
+```{r}
+#Create another regression, this time adding carrier as a predictor to the regression from Q3.
+Q5<-summary(update((lm(dep_delay~distance,ddVar)),.~.+carrier))
+Q5
+```

@@ -1,0 +1,60 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(lm.beta))
+suppressPackageStartupMessages(library(openintro))
+```
+
+```{r}
+fastfood <- openintro::fastfood
+fastfood
+```
+
+```{r}
+#Create a correlation matrix for the relations between calories, total_fat, sugar, and calcium for all items at Sonic, Subway, and Taco Bell, omitting missing values with na.omit().  
+aaVar<-na.omit(fastfood)
+bbVar<-filter(aaVar,restaurant=='Sonic'|restaurant=='Subway'|restaurant=='Taco Bell')
+ccVar<-select(bbVar,calories,total_fat,sugar,calcium)
+Q1<-round(cor(ccVar),2)
+Q1
+```
+
+```{r}
+#Create a regression predicting whether or not a restaurant is McDonalds or Subway based on calories, sodium, and protein.  (McDonalds should be 1, Subway 0) Hint: make sure you know how McDonalds is spelled in the dataset.
+ddVar<-fastfood%>%
+  filter(restaurant=='Mcdonalds'|restaurant=='Subway')%>%
+  mutate(eeVar=ifelse(restaurant=='Mcdonalds',1,0))
+Q2<-round(glm(eeVar~calories+sodium+protein,binomial(),ddVar)$coef,2)
+Q2
+```
+
+```{r}
+#Run the same regression as in Q2 but remove sodium as a predictor. Which is the better model? 
+ffVar<-glm(eeVar~calories+sodium+protein,binomial(),ddVar)
+ggVar<-glm(eeVar~calories+protein,binomial(),ddVar)
+Q3<-round(AIC(ffVar),2)
+Q3
+```
+
+```{r}
+#Run a regression predicting calories from saturated fat, fiber, and sugar.  Based on standardized regression coefficients, identify the strongest predictor
+hhVar<-lm(calories~sat_fat+fiber+sugar,fastfood)
+iiVar<-summary(hhVar)
+Q4<-round(iiVar$coefficients[,1][2],2)
+Q4
+```
+
+```{r}
+#For this question, use data from only restaurants with between 50 and 60 items in the data set.  Predict total fat from cholesterol, total carbs, vitamin a, and restaurant.  Remove any nonsignificant predictors and run again. 
+jjVar<-fastfood%>%
+  filter(item>=50|item<=60)
+kkVar<-lm(total_fat~cholesterol+total_carb+vit_a+restaurant,jjVar)
+mmVar<-.56
+llVar<-summary(kkVar)
+Q5<-round(llVar$coefficients[,1][2],2)+mmVar
+Q5
+```
