@@ -1,0 +1,194 @@
+---
+title: "Brantley Gusler - Final Project - 11/27/2022"
+output: html_notebook
+---
+
+```{r}
+installed.packages('tidyverse')
+installed.packages('carat')
+installed.packages('Hmisc')
+installed.packages('lsr')
+installed.packages('olsrr')
+installed.packages('psych')
+```
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(carat))
+suppressPackageStartupMessages(library(Hmisc))
+suppressPackageStartupMessages(library(lsr))
+suppressPackageStartupMessages(library(olsrr))
+suppressPackageStartupMessages(library(psych))
+```
+
+```{r}
+BRFSS2015 <- read_csv('BRFSS2015_650.csv')
+BRFSS2015
+```
+
+```{r}
+#Q1: How many people reported their general health is excellent?
+
+mbmVar<-BRFSS2015%>%
+  group_by(GENHLTH)%>%
+  summarise(sprintf("%.0f",n=n()))%>%
+  as.data.frame()
+Q1<-noquote(mbmVar[,2][1])
+```
+
+```{r}
+#Q2: What is the highest value for number of adult women in household where someone has ever had a stroke? Summarise the value in a variable called max_numwomen.
+
+max.numwomen<-BRFSS2015 %>%
+  filter(CVDSTRK3==1&NUMWOMEN>=0)%>% 
+  summarise(max_numwomen=max(NUMWOMEN)) 
+Q2<-max.numwomen
+```
+
+
+```{r}
+#Q3: Compute the means and standard deviations for MENTHLTH comparing caregivers who managed personal care such as giving medications, feeding, dressing, or bathing and those who did not. The output should be a dataframe.
+
+aaVar<-BRFSS2015 %>%
+  group_by(CRGVPERS) %>% 
+  filter(CRGVPERS==1|CRGVPERS==2)%>% 
+  summarise(mean_health=round(mean(MENTHLTH),2),sd_health=round(sd(MENTHLTH),2))%>%
+  as.data.frame
+Q3<-aaVar
+Q3
+```
+
+```{r}
+#Q4: What is the median age when respondents were told they had diabetes for those living in Pennsylvania? Only calculate it for those who gave an age. The value should be called med.diab.age and be in a 1 x 1 dataframe.
+
+med.diab.age<-BRFSS2015%>%
+  filter(BRFSS2015$"_STATE"==42&DIABAGE2<=97)%>% 
+  summarise(med.diab.age=median(DIABAGE2))%>%
+  as.data.frame()
+Q4<-med.diab.age
+med.diab.age
+```
+
+```{r}
+#Q5: Predict number of days in the past 30 days mental health was not good from marital status.  Assign the summary of the model to Q5.
+
+bbVar<-BRFSS2015%>%
+  filter(MENTHLTH<=30&MARITAL<=6) 
+ccVar<-lm(MENTHLTH~MARITAL,bbVar) 
+Q5<-summary(ccVar)
+```
+
+```{r}
+#Q6: Use summarise to compare the mean number of days in the past 30 days mental health was not good by marital status and assign to Q6 as a dataframe. Round to two decimals. The mean should be called mean_mental.  You should be able to confirm the results of Q5 after creating this.
+
+ddVar<-BRFSS2015%>%
+  group_by(MARITAL) %>%
+  filter(MENTHLTH<=30&MARITAL<=6) %>% 
+  summarise(mean_mental=round(mean(MENTHLTH),2)) 
+Q6<-ddVar
+```
+
+```{r}
+#Q7: Calculate the means and standard deviations of MENTHLTH for those who have had a stroke and those who have not had a stroke only for those who do not have any kind of healthcare coverage.  The output should be a dataframe assigned to Q7.
+
+eeVar<-BRFSS2015%>%
+  group_by(CVDSTRK3)%>%
+  filter(HLTHPLN1==2&CVDSTRK3<=2)%>% 
+  summarise(mean_mental=round(mean(MENTHLTH),2),sd_mental=round(sd(MENTHLTH),2))%>%
+  as.data.frame()
+Q7<-eeVar
+```
+
+```{r}
+#Q8: Run an ANOVA comparing how many times per week respondents took part in the exercise they spent the most time doing in the past month by marital status, and assign the TukeyHSD post-hoc test to Q8.
+
+ffVar<-BRFSS2015%>%
+  filter(MARITAL<=6&EXEROFT1<=199)%>% 
+  select(EXEROFT1,MARITAL) 
+Q8<-TukeyHSD(ffVar.ANOVA<-aov(EXEROFT1~factor(MARITAL),data=ffVar))
+```
+
+```{r}
+#Q9: Calculate the variance in number of days a respondent drank alcohol in the past week for each type of physical activity or exercise spent in the past month for men.Arrange in descending order, and include only the six with the highest variance in drinks.The output should be a 6 X 2 dataframe, rounded to two decimals and look like:
+
+ggVar <- BRFSS2015%>%
+  filter(SEX==1)%>% 
+  filter(ALCDAY5<201)%>%
+  group_by(EXRACT11)%>% 
+  summarise(var.drinks=var(ALCDAY5))%>% 
+  arrange(desc(var.drinks))%>% 
+  select(EXRACT11,var.drinks)%>%
+  head(6)
+jjVar<-round(as.data.frame(ggVar),2)
+Q9<-jjVar
+Q9
+```
+
+```{r}
+#For the final section, you will choose four variables to explore in ways we have not. Complete the following:
+
+#The four variables I am choosing are the following:
+#FRUITJU1 - During the past month, how many times per day, week or month did you drink 100 percent PURE fruit juices? Do not include fruit-flavored drinks with added sugar or fruit juice you made at home and added sugar to. Only include 100 percent juice.
+#SMOKE100 - Have you smoked at least 100 cigarettes in your entire life?
+#CIMEMLOS - During the past 12 months, have you experienced confusion or memory loss that is happening more often or is getting worse?
+#CHILDREN - How many children less than 18 years of age live in your household?
+```
+
+```{r}
+#Q10: Address the values of any variables. For instance, is “none” equal to a value other than 0? Are there extra decimals implied?
+
+FinalProjectData <- BRFSS2015 %>%
+  select(FRUITJU1,SMOKE100,CIMEMLOS,CHILDREN) %>%
+  na.omit(FRUITJU1,SMOKE100,CIMEMLOS,CHILDREN)
+Q10<-FinalProjectData
+```
+
+```{r}
+#Q11: Remove any outliers. Briefly explain why you chose the method you used. Make sure to comment it out
+RemovedOutliers <- FinalProjectData %>%
+  filter(FRUITJU1<556)%>%#Removed 'Refused' and 'Not asked or Missing
+  filter(CIMEMLOS<9)%>%#Removed 'Refused' and 'Not asked or Missing
+  filter(SMOKE100<7)%>%#Removed 'Refused' and 'Not asked or Missing
+  filter(CHILDREN<89)#Removed 'Refused' and 'Not asked or Missing
+Q11 <- RemovedOutliers
+```
+
+```{r}
+#Q12: Complete exploratory analyses doing appropriate visualizations with ggplot2.
+Q12a<-ggplot(RemovedOutliers)+ geom_histogram(mapping=aes(x=FRUITJU1))
+Q12b<-ggplot(RemovedOutliers)+geom_boxplot(mapping=aes(FRUITJU1))
+Q12c<-ggplot(RemovedOutliers)+ geom_histogram(mapping=aes(x=SMOKE100))
+Q12d<-ggplot(RemovedOutliers)+geom_boxplot(mapping=aes(SMOKE100))
+Q12e<-ggplot(RemovedOutliers)+geom_histogram(mapping=aes(x=CIMEMLOS))
+Q12f<-ggplot(RemovedOutliers)+geom_boxplot(mapping=aes(CIMEMLOS))
+Q12g<-ggplot(RemovedOutliers)+geom_histogram(mapping=aes(x=CHILDREN))
+Q12h<-ggplot(RemovedOutliers)+geom_boxplot(mapping=aes(CHILDREN))
+Q12i<-ggplot(data=RemovedOutliers)+stat_summary(mapping=aes(x=FRUITJU1,y=CHILDREN),fun.min=min,fun.max=max,fun=median)
+Q12j<-ggplot(data=RemovedOutliers,mapping=aes(x=FRUITJU1,y=CHILDREN,color=SMOKE100))+geom_point(position="jitter")+geom_smooth(method='gam')
+Q12k<-ggplot(data=RemovedOutliers)+stat_summary(mapping=aes(x=CIMEMLOS,y=SMOKE100),fun.min=min,fun.max=max,fun=median)
+#Q12l<-plot_qq(RemovedOutliers)
+#Q12m<-plot_intro(RemovedOutliers)
+#Q12n<-plot_correlation(RemovedOutliers)
+#Q12o<-plot_histogram(RemovedOutliers)
+```
+
+```{r}
+#Q13: Run basic descriptive statistics
+Q13<-psych::describe(RemovedOutliers)
+Hmisc::describe(RemovedOutliers)
+#cor.test(RemovedOutliers$CHILDREN,RemovedOutliers$FRUITJU1)
+#lm.beta(lm(CHILDREN~FRUITJU1,RemovedOutliers))
+#summary(glm(CHILDREN~FRUITJU1+SMOKE100, binomial(),RemovedOutliers))
+```
+
+```{r}
+#Q14: Finally, run an appropriate regression predicting one of those variables. Identify the best model.
+FinalQuesVar<-RemovedOutliers %>%
+  mutate(CHILDREN=ifelse(CHILDREN==2,0,1))
+mbmVar<-lm( CHILDREN~FRUITJU1+SMOKE100+CIMEMLOS,data=FinalQuesVar)
+wghVar<-ols_step_all_possible(mbmVar)
+#AIC(mbmVar)
+TYNYVar<-lm(CHILDREN~FRUITJU1+SMOKE100,data=FinalQuesVar) 
+#AIC(TYNYVar)
+Q14<-TYNYVar
+```

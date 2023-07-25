@@ -1,0 +1,16 @@
+s = 0
+A = 0
+l =['J','Q','K','A','T']
+
+for i in hand:
+  if i[0] in l:
+    if i[0] == 'A':
+      A = A+1
+      s = s+11
+    else:
+      s = s+10
+  else:
+    s = s + int(i[0])
+if s>21:
+  s = s - (A*10)
+return s
